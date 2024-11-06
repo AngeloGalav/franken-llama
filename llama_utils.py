@@ -1,6 +1,9 @@
 import torch
 import math
 import torch.nn.functional as F
+from transformers.generation.utils import GenerationMixin
+from transformers.generation import GenerationConfig
+from transformers.modeling_outputs import CausalLMOutputWithPast
 
 from transformers.modeling_outputs import CausalLMOutput
 device = "cuda"
@@ -40,12 +43,12 @@ def get_padded_input(input_seq, target_length):
     return transf_input
 
 
-class SimpleLlamaSkipRepeat(torch.nn.Module):
+class SimpleLlamaSkipRepeat(torch.nn.Module, GenerationMixin):
     """
     This class does not use rotary embeddings, and other stuff/fixes that are
     useful for getting a proper output from the llama model, so it will be mostly gibberish.
     """
-    def __init__(self, model, target_layers_idx, num_repeats, skip_layers=[]):
+    def __init__(self, model, target_layers_idx, num_repeats, config, skip_layers=[], skip_all=False):
         """
         model : llama model used
         target_layer_idx: the target layer to reuse
@@ -53,29 +56,70 @@ class SimpleLlamaSkipRepeat(torch.nn.Module):
         """
         super().__init__()
         self.model = model
-        self.target_layer = model.model.layers[target_layers_idx]
+        self.skip_all = skip_all
+        self.skip_layers = skip_layers
+        if isinstance(target_layers_idx, int):
+            self.target_layers = [target_layers_idx]
+        else:
+            self.target_layers = target_layers_idx
         self.num_repeats = num_repeats
+        self.config = config
+        self.generation_config = GenerationConfig.from_model_config(config)
+        self.main_input_name = "input_ids"
+        self._supports_cache_class = False
+        self.device = torch.device
 
-    def forward(self, input_ids):
+    def forward(self,
+                input_ids,
+                # required args for generate to work
+                inputs_embeds=None,
+                use_cache=None,
+                output_attentions=None,
+                output_hidden_states=None,
+                return_dict=None,
+                test_output=False):
         """
         input_ids : tokenized input
         """
         global device
         pos_embed = get_positional_embeddings(len(input_ids), 256, device)
-        input_embeds = self.model.model.embed_tokens(input_ids)
+        hidden_states = self.model.model.embed_tokens(input_ids)
         # compute position_ids.. no need for them now tho
         position_ids = torch.arange(input_ids.size(1)).unsqueeze(0)
         position_ids = position_ids.to(device=device)
 
-        hidden_states = input_embeds
-        for _ in range(self.num_repeats):
-            if (type(hidden_states) == tuple) :
-                hidden_states = hidden_states[0]
-            hidden_states = self.target_layer(
-                hidden_states, position_embeddings=pos_embed)
+        layer_idx = 0
+
+        layer_indices = self.target_layers if self.skip_all else range(len(self.model.model.layers))
+
+        for layer_idx in layer_indices:
+            rep = self.num_repeats if (self.skip_all or layer_idx in self.target_layers) else 1
+            for _ in range(rep):
+                if isinstance(hidden_states, tuple):
+                    hidden_states = hidden_states[0]
+                hidden_states = self.model.model.layers[layer_idx](
+                    hidden_states, position_embeddings=pos_embed, position_ids=position_ids)
 
         out1 = self.model.model.norm(hidden_states[0])
         # classf head turns input from 4096 (ctx_win size) to 32000 (vocab_size)
         final_output = self.model.lm_head(out1)
-        token_indices = final_output.argmax(dim=-1)
-        return token_indices
+        if (test_output) :
+            # return the transformer output
+            return final_output.argmax(dim=-1)
+        return CausalLMOutputWithPast(
+            loss=None,
+            logits=final_output,
+            past_key_values=None,
+            hidden_states=None,
+            attentions=None,
+        )
+    
+    def can_generate(cls) -> bool:
+        """
+        Returns whether this model can generate sequences with `.generate()`.
+
+        Returns:
+            `bool`: Whether this model can generate sequences with `.generate()`.
+        """
+        # Directly inherits `GenerationMixin` -> can generate
+        return True
