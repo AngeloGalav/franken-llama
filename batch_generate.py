@@ -4,6 +4,7 @@ import torch
 from transformers import AutoTokenizer
 from visualizer import plot_attention_map
 import modified_llama
+import time
 
 model_name = "meta-llama/Llama-2-7b-chat-hf"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -15,6 +16,8 @@ franken_llama.to(device)
 
 # example configurations (check docs for explanations)
 configurations = [
+    # baseline
+    {"layers_to_repeat": [], "layers_to_skip": [], "name": "baseline", "repeats": 1},
     # Front-Focused Reduction
     {"layers_to_repeat": [], "layers_to_skip": list(range(8, 32)), "name": "0-7", "repeats": 1},
     # Top-Heavy Emphasis
@@ -36,7 +39,9 @@ configurations = [
     # Layer Skip with Alternating Repeats
     {"layers_to_repeat": [0, 7, 15, 23, 31], "layers_to_skip": [i for i in range(32) if i not in [0, 7, 15, 23, 31]], "name": "0_7r2_15r2_23r2_31r2", "repeats": 2},
     # Low-efficiency/High-precision skip
-    {"layers_to_repeat": [], "layers_to_skip": [24,25,26], "name": "0-23_27-31", "repeat": 1}
+    {"layers_to_repeat": [], "layers_to_skip": [24,25,26], "name": "0-23_27-31", "repeats": 1},
+    # Single layer skip (very high accuracy)
+    {"layers_to_repeat": [], "layers_to_skip": [15], "name": "15_single_skip", "repeats": 1}
 ]
 
 # all outputs are going into the output folder
@@ -48,8 +53,7 @@ if not os.path.exists(folder_name):
 csv_filename = "outputs/generated_text_results.csv"
 with open(csv_filename, "w", newline='') as csvfile:
     csv_writer = csv.writer(csvfile)
-    csv_writer.writerow(["configuration", "generated_text"])
-
+    csv_writer.writerow(["configuration", "execution_time", "generated_text"])
 
 input_text = "Once upon a time"
 input_ids = tokenizer(input_text, return_tensors='pt').input_ids.to(device)
@@ -63,6 +67,8 @@ for config in configurations:
         skip_all=False
     )
 
+    start_time = time.time()
+
     outputs = franken_llama.generate(
         input_ids,
         max_length=50,
@@ -71,6 +77,9 @@ for config in configurations:
         output_hidden_states=True,
         return_legacy_cache=True
     )
+
+    end_time = time.time()
+    execution_time = end_time - start_time
 
     # generate and cleanup text
     generated_text = tokenizer.decode(outputs.sequences[0], skip_special_tokens=True)
@@ -82,9 +91,8 @@ for config in configurations:
     # save generated text to CSV
     with open(csv_filename, "a", newline='') as csvfile:
         csv_writer = csv.writer(csvfile)
-        csv_writer.writerow([config["name"], wrapped_text])
+        csv_writer.writerow([config["name"], execution_time, wrapped_text])
         print(f"Generated text from {config["name"]} saved to csv")
-
 
     # create folder for attention maps
     folder_name = "outputs/"+config["name"]
