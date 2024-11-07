@@ -48,7 +48,7 @@ class SimpleLlamaSkipRepeat(torch.nn.Module, GenerationMixin):
     This class does not use rotary embeddings, and other stuff/fixes that are
     useful for getting a proper output from the llama model, so it will be mostly gibberish.
     """
-    def __init__(self, model, target_layers_idx, num_repeats, config, skip_layers=[], skip_all=False):
+    def __init__(self, model, layers_to_repeat, num_repeats, config, layers_to_skip=[], skip_all=False):
         """
         model : llama model used
         target_layer_idx: the target layer to reuse
@@ -57,11 +57,11 @@ class SimpleLlamaSkipRepeat(torch.nn.Module, GenerationMixin):
         super().__init__()
         self.model = model
         self.skip_all = skip_all
-        self.skip_layers = skip_layers
-        if isinstance(target_layers_idx, int):
-            self.target_layers = [target_layers_idx]
+        self.skip_layers = layers_to_skip
+        if isinstance(layers_to_repeat, int):
+            self.target_layers = [layers_to_repeat]
         else:
-            self.target_layers = target_layers_idx
+            self.target_layers = layers_to_repeat
         self.num_repeats = num_repeats
         self.config = config
         self.generation_config = GenerationConfig.from_model_config(config)
@@ -95,10 +95,11 @@ class SimpleLlamaSkipRepeat(torch.nn.Module, GenerationMixin):
         for layer_idx in layer_indices:
             rep = self.num_repeats if (self.skip_all or layer_idx in self.target_layers) else 1
             for _ in range(rep):
-                if isinstance(hidden_states, tuple):
-                    hidden_states = hidden_states[0]
-                hidden_states = self.model.model.layers[layer_idx](
-                    hidden_states, position_embeddings=pos_embed, position_ids=position_ids)
+                if (layer_idx not in self.skip_layers) :
+                    if isinstance(hidden_states, tuple):
+                        hidden_states = hidden_states[0]
+                    hidden_states = self.model.model.layers[layer_idx](
+                        hidden_states, position_embeddings=pos_embed, position_ids=position_ids)
 
         out1 = self.model.model.norm(hidden_states[0])
         # classf head turns input from 4096 (ctx_win size) to 32000 (vocab_size)
