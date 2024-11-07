@@ -8,7 +8,7 @@ def set_display_mode(val):
     DISPLAY_MODE = val
     return DISPLAY_MODE
 
-def plot_attention_map(attentions, tokens, layer_idx = 0, head_idx = 0, batch_idx = 0):
+def plot_attention_map(attentions, tokens, layer_idx = 0, head_idx = 0, batch_idx = 0, save_path=None):
     global DISPLAY_MODE
     attention_map = attentions[layer_idx][head_idx][batch_idx].detach().cpu().numpy()
     single_head_attention_map = attention_map[head_idx]  # Now shape is (5, 5)
@@ -32,7 +32,11 @@ def plot_attention_map(attentions, tokens, layer_idx = 0, head_idx = 0, batch_id
             plt.ylabel("Tokens")
 
         plt.title(f"Attention Heatmap - Head {head_idx+1} - Layer {layer_idx+1}")
-        plt.show()
+        if save_path is not None:
+            plt.savefig(save_path)
+        else:
+            plt.show()
+        plt.close()
 
 def visualize_feature_map():
     ...
