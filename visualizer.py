@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib
+matplotlib.use('agg')
 
 DISPLAY_MODE = True
 
@@ -36,7 +38,7 @@ def plot_attention_map(attentions, tokens, layer_idx = 0, head_idx = 0, batch_id
             plt.savefig(save_path)
         else:
             plt.show()
-        plt.close()
+        plt.close('all')
 
 def visualize_feature_map():
     ...

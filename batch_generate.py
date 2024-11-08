@@ -135,9 +135,9 @@ for config in configurations:
     for layer_idx, layer_attention in enumerate(attention_weights):
         num_heads = len(attention_weights[layer_idx])
         if (num_heads < 1):
-            num_heads = [0]
+            head_indices = [0]
         elif (num_heads < 5):
-            num_heads = [0,1,2,3]
+            head_indices = list(range(num_heads))
         else:
             # first 2, middle, and last 2
             head_indices = [0, 1, num_heads // 2, num_heads - 2, num_heads - 1]
