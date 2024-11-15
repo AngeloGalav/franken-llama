@@ -45,18 +45,29 @@ def plot_attention_map(attentions, tokens, layer_idx = 0, head_idx = 0, batch_id
             plt.show()
         plt.close('all')
 
-def visualize_fft(hidden_states, in_layer, out_layer, device, head_idx=0, max_points=512, save_path=None):
+# TODO: add support for old fourier time domain
+def visualize_fft(hidden_states, in_layer, out_layer, device, head_idx=0, max_points=512, attention=False, batch_idx=0, spatial_domain=True, save_path=None):
     """
     Visualizes the Fourier Transform between the input and output of a layer (or layers).
+        - attetion: use attention map as input
     """
     global DISPLAY_MODE
 
-    if device != "cpu" :
-        hidden_state_in = hidden_states[in_layer][head_idx].cpu().numpy()
-        hidden_state_out = hidden_states[out_layer][head_idx].cpu().numpy()
+    if (attention):
+        if device != "cpu" :
+            # batch_0 for now
+            hidden_state_in = hidden_states[in_layer][head_idx][batch_idx].detach().cpu().numpy()
+            hidden_state_out = hidden_states[out_layer][head_idx][batch_idx].detach().cpu().numpy()
+        else:
+            hidden_state_in = hidden_states[in_layer][head_idx]
+            hidden_state_out = hidden_states[out_layer][head_idx]
     else:
-        hidden_state_in = hidden_states[in_layer]
-        hidden_state_out = hidden_states[out_layer]
+        if device != "cpu" :
+            hidden_state_in = hidden_states[in_layer][head_idx].cpu().numpy()
+            hidden_state_out = hidden_states[out_layer][head_idx].cpu().numpy()
+        else:
+            hidden_state_in = hidden_states[in_layer][head_idx]
+            hidden_state_out = hidden_states[out_layer][head_idx]
 
 
     # Apply FFT across the sequence dimension (axis=0)
@@ -64,17 +75,33 @@ def visualize_fft(hidden_states, in_layer, out_layer, device, head_idx=0, max_po
     fft_out = np.fft.fft(hidden_state_out, axis=0)
 
     # Calculate the magnitudes for each frequency component
-    magnitude_in = (np.abs(fft_in).mean(axis=1))[0]
-    magnitude_out = (np.abs(fft_out).mean(axis=1))[0]  # Average across hidden_dim
+    mean_magnitude_in = (np.abs(fft_in).mean(axis=1))[0]
+    mean_magnitude_out = (np.abs(fft_out).mean(axis=1))[0]  # Average across hidden_dim
+
+    # Frequency domain (normalized frequencies)
+    freqs_in = np.fft.fftfreq(hidden_state_in.shape[2])
+    freqs_out = np.fft.fftfreq(hidden_state_out.shape[2])
+
+    plt.figure(figsize=(12, 6))
 
     if DISPLAY_MODE:
-        plt.figure(figsize=(12, 6))
-        plt.plot(magnitude_in, label=f'Layer {in_layer}')
-        plt.plot(magnitude_out, label=f'Layer {out_layer}')
-        plt.xlabel('Frequency')
-        plt.ylabel('Magnitude')
-        plt.title(f'Fourier Transform of Hidden States - Layer {in_layer} vs Layer {out_layer}')
-        plt.legend()
+        # input FFT Magnitude
+        plt.subplot(1, 2, 1)
+        plt.plot(freqs_in, mean_magnitude_in, marker='o')
+        plt.title("Input Attention Map - FFT Magnitude")
+        plt.xlabel("Frequency")
+        plt.ylabel("Magnitude")
+        plt.grid()
+
+        # output FFT Magnitude
+        plt.subplot(1, 2, 2)
+        plt.plot(freqs_out, mean_magnitude_out, marker='o')
+        plt.title("Output Attention Map - FFT Magnitude")
+        plt.xlabel("Frequency")
+        plt.ylabel("Magnitude")
+        plt.grid()
+
+        plt.tight_layout()
 
         if save_path:
             plt.savefig(save_path)
