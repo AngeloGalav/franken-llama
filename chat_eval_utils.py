@@ -1,4 +1,5 @@
 import pandas as pd
+import tqdm
 
 def get_formatted_chat_input(input_text):
     final_text=f"""<s>[INST] <<SYS>>
@@ -17,7 +18,7 @@ def load_nq_dataset_from_parquet(parquet_file):
 
 def generate_long_answer_predictions_llama(model, tokenizer, questions, device, max_length=100):
     predictions = []
-    for question in questions:
+    for question in tqdm(questions):
         input_text = get_formatted_chat_input(question)
         input_ids = tokenizer(input_text, return_tensors='pt').input_ids.to(device)
         outputs = model.generate(input_ids, max_new_tokens=max_length, return_dict_in_generate=True)

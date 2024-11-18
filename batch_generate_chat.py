@@ -5,10 +5,11 @@ import os
 import csv
 import torch
 from configurations import configurations
-from llama_utils import get_formatted_chat_input
+from chat_eval_utils import get_formatted_chat_input
 from transformers import AutoTokenizer
 import modified_llama
 import time
+import tqdm
 import chat_eval_utils
 
 model_name = "meta-llama/Llama-2-7b-chat-hf"
@@ -44,8 +45,8 @@ for conf in best_configurations:
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(["configuration", "execution_time", "question", "generated_text"])
 
-
-questions = chat_eval_utils.load_nq_dataset_from_parquet("nq_dataset_partial/validation-00000-of-00007.parquet")
+max_len_data=100
+questions = chat_eval_utils.load_nq_dataset_from_parquet("nq_dataset_partial/validation-00000-of-00007.parquet")[:max_len_data]
 
 for config in configurations:
     if config["name"] in best_configurations:
@@ -64,7 +65,7 @@ for config in configurations:
 
         cleaned_answers = []
         # generate and cleanup text
-        for i in answers:
+        for i in answers  :
             cleaned_text = i.replace('\n', ' ').strip()
             cleaned_text = cleaned_text.encode("ascii", "replace").decode("ascii")
             wrapped_text = f'"{cleaned_text}"'
