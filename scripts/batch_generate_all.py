@@ -2,9 +2,11 @@ import os
 import csv
 import torch
 from transformers import AutoTokenizer
-from visualizer import plot_attention_map
-import modified_llama
 import time
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from visualizer import plot_attention_map
+from modified_llama import ModifiedLlamaForCausalLM
 from configurations import configurations
 
 model_name = "meta-llama/Llama-2-7b-chat-hf"
@@ -12,7 +14,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"using device {device}")
-franken_llama = modified_llama.ModifiedLlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, attn_implementation="eager")
+franken_llama = ModifiedLlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, attn_implementation="eager")
 franken_llama.to(device)
 
 

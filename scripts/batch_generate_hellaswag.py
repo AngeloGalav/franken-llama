@@ -6,12 +6,14 @@ import re
 import csv
 import json
 import torch
-from configurations import configurations
 from transformers import AutoTokenizer
-import modified_llama
 import time
 from tqdm import tqdm
-import eval_utils
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from configurations import configurations
+from modified_llama import ModifiedLlamaForCausalLM
+from eval_utils import generate_hellaswag_predictions_llama
 
 # Load the model and tokenizer
 model_name = "meta-llama/Llama-2-7b-chat-hf"
@@ -19,7 +21,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"using device {device}")
-franken_llama = modified_llama.ModifiedLlamaForCausalLM.from_pretrained(
+franken_llama = ModifiedLlamaForCausalLM.from_pretrained(
     model_name, torch_dtype=torch.float16, attn_implementation="eager"
 )
 franken_llama.to(device)
@@ -94,7 +96,7 @@ for config in configurations:
                            "\nAnswer: "
 
             start_time = time.time()
-            answer = eval_utils.generate_hellaswag_predictions_llama(franken_llama, tokenizer, input_prompt, device, max_length=200)
+            answer = generate_hellaswag_predictions_llama(franken_llama, tokenizer, input_prompt, device, max_length=200)
             end_time = time.time()
             execution_time = end_time - start_time
 

@@ -4,19 +4,21 @@ Script to run models on the natural questions dataset
 import os
 import csv
 import torch
-from configurations import configurations
 from transformers import AutoTokenizer
-import modified_llama
 import time
 from tqdm import tqdm
-import eval_utils
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from modified_llama import ModifiedLlamaForCausalLM
+from configurations import configurations
+from eval_utils import generate_long_answer_predictions_llama, load_nq_dataset_from_parquet
 
 model_name = "meta-llama/Llama-2-7b-chat-hf"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"using device {device}")
-franken_llama = modified_llama.ModifiedLlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, attn_implementation="eager")
+franken_llama = ModifiedLlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, attn_implementation="eager")
 franken_llama.to(device)
 print('loaded model into memory')
 
@@ -42,7 +44,7 @@ for conf in best_configurations:
         csv_writer.writerow(["configuration", "execution_time", "question", "generated_text"])
 
 max_len_data=50
-questions = eval_utils.load_nq_dataset_from_parquet("nq_dataset_partial/validation-00000-of-00007.parquet")[:max_len_data]
+questions = load_nq_dataset_from_parquet("nq_dataset_partial/validation-00000-of-00007.parquet")[:max_len_data]
 
 for config in configurations:
     if config["name"] in best_configurations:
@@ -55,7 +57,7 @@ for config in configurations:
         )
         for question in tqdm(questions):
             start_time = time.time()
-            answer = eval_utils.generate_long_answer_predictions_llama(franken_llama, tokenizer, question, device)
+            answer = generate_long_answer_predictions_llama(franken_llama, tokenizer, question, device)
             end_time = time.time()
             execution_time = end_time - start_time
 

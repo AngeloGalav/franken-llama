@@ -3,9 +3,11 @@ Script to run models and compute Fourier Transforms on the attention maps
 """
 import os
 import torch
-from configurations import configurations
 from transformers import AutoTokenizer
-import modified_llama
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from configurations import configurations
+from modified_llama import ModifiedLlamaForCausalLM
 from visualizer import visualize_fft
 
 model_name = "meta-llama/Llama-2-7b-chat-hf"
@@ -13,7 +15,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
-franken_llama = modified_llama.ModifiedLlamaForCausalLM.from_pretrained(
+franken_llama = ModifiedLlamaForCausalLM.from_pretrained(
     model_name, torch_dtype=torch.float16, attn_implementation="eager"
 )
 franken_llama.to(device)
