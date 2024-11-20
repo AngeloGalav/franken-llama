@@ -107,6 +107,10 @@ for config in configurations:
             if is_correct:
                 correct_count += 1
             total_count += 1
+            
+            cleaned_text = answer.replace('\n', ' ').strip()
+            cleaned_text = cleaned_text.encode("ascii", "replace").decode("ascii")
+            cleaned_text = f'"{cleaned_text}"'
 
             csv_filename = output_folder + f"/{config['name']}.csv"
             with open(csv_filename, "a", newline="") as csvfile:
@@ -116,7 +120,7 @@ for config in configurations:
                     execution_time,
                     context,
                     choices,
-                    predicted_choice + 1 if predicted_choice >= 0 else "Invalid",
+                    cleaned_text,
                     is_correct,
                 ])
 
