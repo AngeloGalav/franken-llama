@@ -23,3 +23,11 @@ def generate_long_answer_predictions_llama(model, tokenizer, question, device, m
     new_tokens = generated_ids[0][input_ids.shape[-1]:]
     answer = tokenizer.decode(new_tokens, skip_special_tokens=True)
     return answer
+
+def generate_hellaswag_predictions_llama(model, tokenizer, input_text, device, max_length=20):
+    input_ids = tokenizer(input_text, return_tensors='pt').input_ids.to(device)
+    outputs = model.generate(input_ids, max_length=max_length, return_legacy_cache=True, return_dict_in_generate=True)
+    generated_ids = outputs.sequences
+    new_tokens = generated_ids[0][input_ids.shape[-1]:]
+    answer = tokenizer.decode(new_tokens, skip_special_tokens=True)
+    return answer
