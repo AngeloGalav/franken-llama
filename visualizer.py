@@ -88,7 +88,7 @@ def visualize_fft(hidden_states, in_layer, out_layer, device, head_idx=0, max_po
         # input FFT Magnitude
         plt.subplot(1, 2, 1)
         plt.plot(freqs_in, mean_magnitude_in, marker='o')
-        plt.title("Input Attention Map - FFT Magnitude")
+        plt.title(f"First Layer Attention Map - FFT Magnitude")
         plt.xlabel("Frequency")
         plt.ylabel("Magnitude")
         plt.grid()
@@ -96,7 +96,7 @@ def visualize_fft(hidden_states, in_layer, out_layer, device, head_idx=0, max_po
         # output FFT Magnitude
         plt.subplot(1, 2, 2)
         plt.plot(freqs_out, mean_magnitude_out, marker='o')
-        plt.title("Output Attention Map - FFT Magnitude")
+        plt.title(f"Last Layer Attention Map - FFT Magnitude")
         plt.xlabel("Frequency")
         plt.ylabel("Magnitude")
         plt.grid()

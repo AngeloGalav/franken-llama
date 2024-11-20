@@ -5,3 +5,4 @@ nq_dataset_partial
 outputs2
 hellaswag_val.jsonl
 outputs_hellaswag
+outputs_fourier
