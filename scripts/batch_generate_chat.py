@@ -32,7 +32,7 @@ best_configurations = ['baseline',
                   'skip_near_end_keep_last_two']
 
 # all outputs are going into the output folder
-output_folder = "outputs2"
+output_folder = "outputs_nq"
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 

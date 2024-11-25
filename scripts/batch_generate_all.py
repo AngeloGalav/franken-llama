@@ -19,7 +19,7 @@ franken_llama.to(device)
 
 
 # all outputs are going into the output folder
-output_folder = "outputs"
+output_folder = "outputs_attention_maps"
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
