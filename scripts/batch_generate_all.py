@@ -11,6 +11,7 @@ from configurations import configurations
 
 model_name = "meta-llama/Llama-2-7b-chat-hf"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
+output_attention_map = False
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"using device {device}")
@@ -73,28 +74,29 @@ for config in configurations:
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
-    # plot and save attention maps
-    # only maps for the first 2 and last 2 + middle one heads
-    attention_weights = outputs.attentions
-    tokens = tokenizer.convert_ids_to_tokens(input_ids.squeeze().tolist())
+    if (output_attention_map) :
+        # plot and save attention maps
+        # only maps for the first 2 and last 2 + middle one heads
+        attention_weights = outputs.attentions
+        tokens = tokenizer.convert_ids_to_tokens(input_ids.squeeze().tolist())
 
-    # WARNING: the layer_idx is not exactly the name of the layer of the network, instead
-    # it is the i-th layer that the data passes through (which could be another layer or
-    # a repeated one)
-    for layer_idx, layer_attention in enumerate(attention_weights):
-        num_heads = len(attention_weights[layer_idx])
-        if (num_heads < 1):
-            head_indices = [0]
-        elif (num_heads < 5):
-            head_indices = list(range(num_heads))
-        else:
-            # first 2, middle, and last 2
-            head_indices = [0, 1, num_heads // 2, num_heads - 2, num_heads - 1]
+        # WARNING: the layer_idx is not exactly the name of the layer of the network, instead
+        # it is the i-th layer that the data passes through (which could be another layer or
+        # a repeated one)
+        for layer_idx, layer_attention in enumerate(attention_weights):
+            num_heads = len(attention_weights[layer_idx])
+            if (num_heads < 1):
+                head_indices = [0]
+            elif (num_heads < 5):
+                head_indices = list(range(num_heads))
+            else:
+                # first 2, middle, and last 2
+                head_indices = [0, 1, num_heads // 2, num_heads - 2, num_heads - 1]
 
-        for head_idx in head_indices:
-            # plot attention map for each specified head
-            plot_path = os.path.join(folder_name, f"layer{layer_idx}_head{head_idx}.png")
-            plot_attention_map(attention_weights, tokens, layer_idx=layer_idx, head_idx=head_idx, save_path=plot_path)
+            for head_idx in head_indices:
+                # plot attention map for each specified head
+                plot_path = os.path.join(folder_name, f"layer{layer_idx}_head{head_idx}.png")
+                plot_attention_map(attention_weights, tokens, layer_idx=layer_idx, head_idx=head_idx, save_path=plot_path)
 
     print(f"Configuration {config['name']} processed and saved.")
 

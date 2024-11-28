@@ -96,7 +96,7 @@ for config in configurations:
                            "\nAnswer: "
 
             start_time = time.time()
-            answer = generate_hellaswag_predictions_llama(franken_llama, tokenizer, input_prompt, device, max_length=200)
+            answer = generate_hellaswag_predictions_llama(franken_llama, tokenizer, input_prompt, device, max_length=250)
             end_time = time.time()
             execution_time = end_time - start_time
 
