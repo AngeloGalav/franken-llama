@@ -10,7 +10,7 @@
 %This block of code defines the information to appear in the
 %Title page
 \title[] %optional
-{FRANKEN-LLAMA: Experimenting with LLama2 surgery to make it more efficient.}
+{Franken-LLAMA: Experimenting with LLama2 surgery to make it more efficient}
 
 \subtitle{Project Work in APAI}
 
@@ -18,7 +18,7 @@
 {Presented by Angelo Galavotti}
 
 \date[December 2024] % (optional)
-{Università di Bologna, November 2024}
+{Università di Bologna, December 2024}
 
 %End of title page configuration block
 %------------------------------------------------------------
@@ -42,8 +42,15 @@
 
 \section{Introduction}
 \begin{frame}
-  \frametitle{Quick overview on LLama2}
-  ...
+  \frametitle{Quick overview on LLaMA 2}
+  LLaMA 2 (Large Language Model Meta AI version 2) is an \textbf{open-source} family 
+  of foundational language models created by Meta.
+  \begin{itemize}
+    \item Available in \textbf{7B, 13B, and 70B} (billion parameters) versions.
+    \item Performance is comparable to OpenAI's ChatGPT 3.5.
+    \item Comes in a \textbf{base version} and \textbf{chat version}, fine-tuned with
+    \textbf{RLHF} (Reinforcement Learning with Human Feedback) for conversational use.
+  \end{itemize}
   \end{frame}
 
 %---------------------------------------------------------
@@ -53,42 +60,105 @@
 %---------------------------------------------------------
 %Highlighting text
 \begin{frame}
-\frametitle{Why FRANKEN-LLAMA}
+\frametitle{Franken-LLAMA}
+\textbf{Franken-LLAMA} consists in optimizing LLaMA 2 (7B Chat) by reducing 
+computational and memory costs through \textbf{layer skipping} and \textbf{repetition}, effectively performing "surgery" on the model.
+\begin{figure}[h] % 'h' places the figure approximately here
+  \centering
+  \includegraphics[width=0.3\textwidth]{images/image.png}
+\end{figure}
 \end{frame}
 
 \begin{frame}
   \frametitle{Configurations}
+  A total of \textbf{25 configurations} of skipped and repeated layers were tested by completing the phrase "Once upon a time" using a maximum of 50 tokens.
+
+  Most of them produced gibberish text.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Output examples}
+  \begin{table}[h]
+    \centering
+    \begin{tabular}{|l|p{0.58\textwidth}|}
+        \hline
+        \textbf{Configuration} & \textbf{Generated text} \\ \hline
+        \small \url{0-7} & {\small Once upon a timezetempreasacondarichte?? trickster goddess pue moonkennecticut [..] Reserveikaiwitzter PetersburgovPortail [..]} \\ \hline
+        \small \url{all_except_last_two} & {\small Once upon a time year0 **stadt [..] Death it Yearwaltapk Progress R?f?rencePU. ??? [..]} \\ \hline
+        \small \url{only_even_layers} & {\small Once upon a time S??. R S l d d? S S S S S [..]} \\ \hline
+        \small \url{0r2-14_17-23_25-31r2} & {\small Once upon a time, in the midst of a busy schedulesomeone's attention was caught.?You the world and its of the, and and and [..]} \\ \hline
+        \small \url{first_last_8r2} &{\small Once upon a time in?ceycofortia-inaymskoe Bridge---Monlinaiticky'830 [..]} \\ \hline
+        \small \url{15r3_23r3_31r3} &{\small Once upon a timepus pri rosgemeingemeingemeinwach junigemeingemei [..]} \\ \hline
+      \end{tabular}
+    \label{tab:generated_text}
+  \end{table}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Configurations}
+  After careful examination, only \textbf{6 configurations} were ultimately chosen for more thorough testing,
+  \begin{itemize}
+    \item \url{'0-23\_27-31'}, skips layers from 24 to 26
+    \item \url{'15\_single\_skip'}, skips only layer 15
+    \item \url{'mid\_expansion\_with\_repeats'}, skips layers [6, 7, 8, 9, 25, 26, 27, 28], repeats layers from 14 to 19 twice
+    \item \url{'2\_3rd\_of\_llama'}, skips layers from 11 to 20
+    \item \url{'2\_3rds\_plus\_llama'}, skips only odd indexed layers from 11 to 20
+    \item \url{'skip\_near\_end\_keep\_last\_two'}, skips layer from 27 to 29
+  \end{itemize}
+  The least computationally costly configuration is \url{'2\_3rd\_of\_llama'} ($\sim 6.2$M MACs)
+  \begin{itemize}
+    \item even though it doesn't involve layer repetition, it is also the \textbf{lightest memory-wise}.
+    \item however, it also produced the \textbf{lowest quality} outputs.
+  \end{itemize}
   \end{frame}
-  
 
 \begin{frame}
   \frametitle{Experimental Setup}
+  The 6 configuration tested on the \textbf{HellaSwag} dataset and were compared
+  to a \textbf{baseline} (i.e. the full Llama1-7B-chat model).
+  \begin{itemize}
+    \item The HellaSwag dataset consists on 4 questions with only one right answer. Each model has to predict the right answer. It allows to test the \textbf{logical capabilities} of a model.
+    \item The models were evaluated on 50 samples of this dataset.
+    \item Each model has also undergone a preliminary qualitative test by generating answers to 50 samples of the Natural Questions dataset.
+  \end{itemize}
 \end{frame}
 
 
 \begin{frame}
-  \frametitle{Results}
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{Fourier Transform comparisons}
-
-\end{frame}
-
-
-
-%  future work part
-\begin{frame}
-  \frametitle{Future work}
-  ...
+  \frametitle{Results on HellaSwag}
+  \begin{table}[h]
+    \centering
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Configuration} & \textbf{HellaSwag} & \textbf{Avg. exec. time} \\ \hline
+        \url{baseline} & 0.34 & 91.1 s\\ \hline
+        \url{0-23_27-31} & 0.38 & 81.2 s\\ \hline
+        \url{15_single_skip} & 0.38 & 95.8 s\\ \hline
+        \url{mid_expansion_with_repeats} & 0.22 & \textbf{68.8 s} \\ \hline
+        \url{2_3rd_of_llama} & 0.26 & 95.4 s\\ \hline
+        \url{2_3rds_plus_llama} & 0.30 & 102.7 s\\ \hline
+        \url{skip_near_end_keep_last_two} & \textbf{0.42} & 79.0 s\\ \hline
+    \end{tabular}
+    \caption{HellaSwag scores (i.e. percentage of correct answers)}
+    \label{tab:model_comparison}
+\end{table}
 \end{frame}
 
 %---------------------------------------------------------
 
 \begin{frame}
   \frametitle{In conclusion}
-  ...
+  \begin{enumerate}
+    \item Skipping and repeating layers can be a \textbf{viable solution} to make light-weight LLMs.
+    \item Generally, repetition can cause the \textbf{quality of the result} to \textbf{drop} significantly.
+    \item Best results are achieved when skipping layers in the \textbf{middle} of the feature extractor.
+  \end{enumerate}
+  Future work:
+  \begin{itemize}
+    \item Testing with more samples/configurations.
+    \item kV cache compression to reduce memory footprint even further.
+  \end{itemize}
 \end{frame}
 %---------------------------------------------------------
 \begin{frame}
@@ -105,8 +175,8 @@
     \begin{Large}
       Thank you!
     \end{Large}
+    \\ You can reach out at \url{angelo.galavotti@studio.unibo.it} for more questions!
   \end{center}
-    
 \end{frame}
 %---------------------------------------------------------
 
