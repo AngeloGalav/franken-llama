@@ -77,25 +77,6 @@ computational and memory costs through \textbf{layer skipping} and \textbf{repet
 \end{frame}
 
 \begin{frame}
-  \frametitle{Output examples}
-  \begin{table}[h]
-    \centering
-    \begin{tabular}{|l|p{0.58\textwidth}|}
-        \hline
-        \textbf{Configuration} & \textbf{Generated text} \\ \hline
-        \small \url{0-7} & {\small Once upon a timezetempreasacondarichte?? trickster goddess pue moonkennecticut [..] Reserveikaiwitzter PetersburgovPortail [..]} \\ \hline
-        \small \url{all_except_last_two} & {\small Once upon a time year0 **stadt [..] Death it Yearwaltapk Progress R?f?rencePU. ??? [..]} \\ \hline
-        \small \url{only_even_layers} & {\small Once upon a time S??. R S l d d? S S S S S [..]} \\ \hline
-        \small \url{0r2-14_17-23_25-31r2} & {\small Once upon a time, in the midst of a busy schedulesomeone's attention was caught.?You the world and its of the, and and and [..]} \\ \hline
-        \small \url{first_last_8r2} &{\small Once upon a time in?ceycofortia-inaymskoe Bridge---Monlinaiticky'830 [..]} \\ \hline
-        \small \url{15r3_23r3_31r3} &{\small Once upon a timepus pri rosgemeingemeingemeinwach junigemeingemei [..]} \\ \hline
-      \end{tabular}
-    \label{tab:generated_text}
-  \end{table}
-\end{frame}
-
-
-\begin{frame}
   \frametitle{Configurations}
   After careful examination, only \textbf{6 configurations} were ultimately chosen for more thorough testing,
   \begin{itemize}
@@ -118,7 +99,7 @@ computational and memory costs through \textbf{layer skipping} and \textbf{repet
   The 6 configuration tested on the \textbf{HellaSwag} dataset and were compared
   to a \textbf{baseline} (i.e. the full Llama1-7B-chat model).
   \begin{itemize}
-    \item The HellaSwag dataset consists on 4 questions with only one right answer. Each model has to predict the right answer. It allows to test the \textbf{logical capabilities} of a model.
+    \item The HellaSwag dataset consists in a set of questions with 4 possible answers, and only one of them is the correct one. Each model has to predict the right answer. It allows to test the \textbf{logical capabilities} of a model.
     \item The models were evaluated on 50 samples of this dataset.
     \item Each model has also undergone a preliminary qualitative test by generating answers to 50 samples of the Natural Questions dataset.
   \end{itemize}
@@ -180,5 +161,22 @@ computational and memory costs through \textbf{layer skipping} and \textbf{repet
 \end{frame}
 %---------------------------------------------------------
 
+\begin{frame}
+  \frametitle{Appendix: output examples}
+  \begin{table}[h]
+    \centering
+    \begin{tabular}{|l|p{0.58\textwidth}|}
+        \hline
+        \textbf{Configuration} & \textbf{Generated text} \\ \hline
+        \small \url{0-7} & {\small Once upon a timezetempreasacondarichte?? trickster goddess pue moonkennecticut [..] Reserveikaiwitzter PetersburgovPortail [..]} \\ \hline
+        \small \url{all_except_last_two} & {\small Once upon a time year0 **stadt [..] Death it Yearwaltapk Progress R?f?rencePU. ??? [..]} \\ \hline
+        \small \url{only_even_layers} & {\small Once upon a time S??. R S l d d? S S S S S [..]} \\ \hline
+        \small \url{0r2-14_17-23_25-31r2} & {\small Once upon a time, in the midst of a busy schedulesomeone's attention was caught.?You the world and its of the, and and and [..]} \\ \hline
+        \small \url{first_last_8r2} &{\small Once upon a time in?ceycofortia-inaymskoe Bridge---Monlinaiticky'830 [..]} \\ \hline
+        \small \url{15r3_23r3_31r3} &{\small Once upon a timepus pri rosgemeingemeingemeinwach junigemeingemei [..]} \\ \hline
+      \end{tabular}
+    \label{tab:generated_text}
+  \end{table}
+\end{frame}
 
 \end{document}
